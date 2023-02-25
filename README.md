@@ -14,6 +14,12 @@ TODO: Write usage instructions here
 
 TODO: Write development instructions here
 
+- load common functions
+- install/upgrade script
+- rationalise multi-stage builds
+- build flags
+- overridable settings
+
 ## Contributing
 
 1. Fork it (<https://github.com/your-github-user/donk/fork>)

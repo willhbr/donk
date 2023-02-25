@@ -2,7 +2,7 @@ version: 2.0
 shards:
   anyolite:
     git: https://github.com/anyolite/anyolite.git
-    version: 1.0.0
+    version: 1.0.0+git.commit.2083efd3634d025f4eb9f83845dbe349a3eead28
 
   geode:
     path: ../geode
