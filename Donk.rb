@@ -1,12 +1,15 @@
 require "crystal"
 
-run_crystal(
+crystal_runnable(
   name: "test",
-  main: "test.cr",
+  target: "donk",
 )
 
 crystal_image(
   name: "hello_world",
-  main: "test.cr",
-  build_flags: %w(--release)
+  target: "donk",
+  build_flags: %w(--release),
+  local_shards: [
+    "../geode"
+  ]
 )

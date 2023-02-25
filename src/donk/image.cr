@@ -70,6 +70,7 @@ class RunImage
 
   @[Anyolite::WrapWithoutKeywords]
   def mount(local : String, container : String)
+    local = Path[local].expand.to_s
     @mounts << {local, container}
     nil
   end
@@ -81,7 +82,6 @@ class RunImage
   end
 
   def run
-    Log.info { "running image: #{@name}" }
     args = ["run"]
 
     @mounts.each do |mount|
@@ -98,8 +98,6 @@ class RunImage
 
     args.concat(["-it", "--rm", @name])
 
-    Log.info { "Docker args: #{args}" }
-
     status = Process.run(
       Funcs.context.container_binary,
       args: args,
@@ -108,6 +106,5 @@ class RunImage
       error: Process::Redirect::Inherit,
     )
     raise "Process failed: #{status}" unless status.success?
-    Log.info { "Container finished: #{status}" }
   end
 end

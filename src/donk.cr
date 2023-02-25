@@ -16,6 +16,7 @@ def make_interpreter
   Anyolite.wrap(rb, Funcs)
   Anyolite.wrap(rb, ImageDef)
   Anyolite.wrap(rb, RunImage)
+  Anyolite.wrap(rb, BuildContext)
   rb.execute_script_line("include Funcs")
   rb
 end

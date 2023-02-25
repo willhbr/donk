@@ -19,26 +19,22 @@ module Funcs
 
   @[Anyolite::WrapWithoutKeywords]
   def self.build_image(image : ImageDef, name : String)
-    Log.info { "building image: #{name}" }
-
     config = image.render_config
-    Log.info { "Config:\n#{config}" }
     dockerfile = IO::Memory.new(config)
 
     status = Process.run(
       @@context.not_nil!.container_binary,
-      args: ["build", "-t", name, "-f", "-", "."],
+      args: ["build", "-t", context.full_name(name), "-f", "-", "."],
       input: dockerfile,
       output: Process::Redirect::Inherit,
       error: Process::Redirect::Inherit,
     )
     raise "Process failed: #{status}" unless status.success?
-    Log.info { "Image built: #{status}" }
   end
 
   @[Anyolite::WrapWithoutKeywords]
   def self.run_image(name : String) : RunImage
-    return RunImage.new(name)
+    return RunImage.new(context.full_name(name))
   end
 
   @[Anyolite::WrapWithoutKeywords]
