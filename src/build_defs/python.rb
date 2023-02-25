@@ -1,3 +1,5 @@
+require "utils"
+
 PYTHON_DEFAULT_IMAGE = "python:alpine"
 
 def _python_imgdef(opts)
@@ -17,16 +19,7 @@ def python_runnable(**opts)
   imgdef = _python_imgdef(opts)
 
   runner = run_image(name)
-  if opts[:ports]
-    opts[:ports].each do |local, container|
-      runner.bind_port local.to_i, container.to_i
-    end
-  end
-  if opts[:mounts]
-    opts[:mounts].each do |local, container|
-      runner.mount local, container
-    end
-  end
+  _add_ports_and_mounts(runner, opts)
 
   define_rule(name) do
     build_image(imgdef, name)

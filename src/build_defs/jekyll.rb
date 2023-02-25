@@ -9,8 +9,9 @@ def jekyll_dev(**opts)
   img.run ["bundle", "install"]
   img.entrypoint %w(bundle exec jekyll serve --host=0 -w)
 
+  port = opts[:port] || 4000
   run = run_image(name)
-  run.bind_port 4000, 4000
+  run.bind_port port, 4000
   # Mount the files so we can do live editing
   run.mount ".", "/src"
 

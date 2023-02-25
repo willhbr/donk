@@ -93,7 +93,7 @@ class RunImage
     @ports.each do |port|
       l, c = port
       args << "-p"
-      args << "#{c}:#{l}"
+      args << "#{l}:#{c}"
     end
 
     args.concat(["-it", "--rm", @name])
