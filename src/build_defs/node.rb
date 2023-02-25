@@ -1,24 +1,24 @@
-RUBY_DEFAULT_IMAGE = "ruby:alpine"
+NODE_DEFAULT_IMAGE = "node:18-alpine"
 
-def _ruby_imgdef(opts)
+def _node_imgdef(opts)
   main = opts[:main]
 
-  build_image = opts[:build_image] || RUBY_DEFAULT_IMAGE
+  build_image = opts[:build_image] || NODE_DEFAULT_IMAGE
   imgdef = define_image(build_image)
   imgdef.workdir "/src"
-  if File.exists? "Gemfile"
-    imgdef.copy "Gemfile*", "."
-    imgdef.run %w(bundle install)
+  if File.exists? "package.json"
+    imgdef.copy "package*.json", "."
+    imgdef.run %w(npm install)
   end
   imgdef.copy ".", "."
-  imgdef.entrypoint ["ruby", main]
+  imgdef.entrypoint ["node", main]
   return imgdef
 end
 
-def ruby_runnable(**opts)
+def node_runnable(**opts)
   name = opts[:name]
 
-  imgdef = _ruby_imgdef(opts)
+  imgdef = _node_imgdef(opts)
 
   runner = run_image(name)
   if opts[:ports]
@@ -38,10 +38,10 @@ def ruby_runnable(**opts)
   end
 end
 
-def ruby_image(**opts)
+def node_image(**opts)
   name = opts[:name]
 
-  imgdef = _ruby_imgdef(opts)
+  imgdef = _node_imgdef(opts)
 
   define_rule(name) do
     build_image(imgdef, name)

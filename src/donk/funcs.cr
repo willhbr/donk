@@ -50,24 +50,20 @@ module Funcs
 
   @[Anyolite::WrapWithoutKeywords]
   def self.require(path : String) : Bool
-    p = Path[path].expand(base: "/home/will/projects/donk/src/build_defs")
-    unless File.exists? p
-      p = p.sibling(p.basename + ".rb")
+    donk_path = ENV["DONK_PATH"]? || Path["~/.donk/src/build_defs"].expand(home: true).to_s
+    dirs = [Dir.current] + donk_path.split(':')
+    unless path.ends_with? ".rb"
+      path += ".rb"
     end
-    if File.exists? p
-      return false if @@paths.includes? p
-      Anyolite::RbRefTable.get_current_interpreter.load_script_from_file p.to_s
-      @@paths << p
-      return true
+    dirs.each do |dir|
+      p = Path[path].expand(base: dir)
+      if File.exists? p
+        return false if @@paths.includes? p
+        Anyolite::RbRefTable.get_current_interpreter.load_script_from_file p.to_s
+        @@paths << p
+        return true
+      end
     end
-
-    p = Path[path].expand(home: true, expand_base: true)
-    unless File.exists? p
-      p = p.sibling(p.basename + ".rb")
-    end
-    return false if @@paths.includes? p
-    Anyolite::RbRefTable.get_current_interpreter.load_script_from_file p.to_s
-    @@paths << p
-    true
+    raise "unable to find #{path} in any of #{dirs}"
   end
 end
