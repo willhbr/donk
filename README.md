@@ -1,33 +1,28 @@
-# donk
+# DONK
 
-TODO: Write a description here
+_Container build system_
 
 ## Installation
 
-TODO: Write installation instructions here
+```
+$ shards build --release
+$ cp bin/donk ~/.local/bin
+$ ln -s $PWD $HOME/.donk
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+Define a `Donk.rb` file in your project:
 
-## Development
+```ruby
+ruby_runnable(
+  name: "my_ruby_project",
+  main: "main.rb"
+)
+```
 
-TODO: Write development instructions here
+And then run it:
 
-- load common functions
-- install/upgrade script
-- rationalise multi-stage builds
-- build flags
-- overridable settings
-
-## Contributing
-
-1. Fork it (<https://github.com/your-github-user/donk/fork>)
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
-
-## Contributors
-
-- [Will Richardson](https://github.com/your-github-user) - creator and maintainer
+```shell
+$ donk my_ruby_project
+```
