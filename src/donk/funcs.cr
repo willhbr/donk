@@ -12,6 +12,11 @@ module Funcs
   def self.context=(@@context : BuildContext)
   end
 
+  @[Anyolite::WrapWithoutKeywords]
+  def self.expand(path : String) : String
+    context.expand_path(path).to_s
+  end
+
   @[Anyolite::WrapWithoutKeywords(1)]
   def self.define_image(from : String, named : String? = nil) : ImageDef
     return ImageDef.new from, named
@@ -49,21 +54,26 @@ module Funcs
   end
 
   @[Anyolite::WrapWithoutKeywords]
-  def self.require(path : String) : Bool
-    donk_path = ENV["DONK_PATH"]? || Path["~/.donk/src/build_defs"].expand(home: true).to_s
-    dirs = [Dir.current] + donk_path.split(':')
-    unless path.ends_with? ".rb"
-      path += ".rb"
+  def self._require_internal(current : String, path_pattern : String) : Bool
+    unless path_pattern.ends_with? ".rb"
+      path_pattern += ".rb"
     end
-    dirs.each do |dir|
-      p = Path[path].expand(base: dir)
-      if File.exists? p
-        return false if @@paths.includes? p
-        Anyolite::RbRefTable.get_current_interpreter.load_script_from_file p.to_s
-        @@paths << p
-        return true
-      end
+    expanded = Path[path_pattern].expand(base: context.root_dir, home: true)
+    current_path = Path[current].parent
+    expanded_current = Path[path_pattern].parent.expand(base: current_path, home: true)
+    one_file_matched = false
+    globs = Dir.glob(expanded_current, expanded)
+    if globs.empty?
+      raise "No files matched: #{expanded}"
     end
-    raise "unable to find #{path} in any of #{dirs}"
+    loaded = 0
+    globs.each do |p|
+      path = Path[p]
+      next if @@paths.includes? path
+      loaded += 1
+      Anyolite::RbRefTable.get_current_interpreter.load_script_from_file path.to_s
+      @@paths << path
+    end
+    return loaded > 0
   end
 end

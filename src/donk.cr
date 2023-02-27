@@ -18,6 +18,7 @@ def make_interpreter
   Anyolite.wrap(rb, RunImage)
   Anyolite.wrap(rb, BuildContext)
   rb.execute_script_line("include Funcs")
+  rb.execute_script_line({{ read_file "src/builtin.rb" }})
   rb
 end
 
@@ -28,6 +29,14 @@ end
 rb = make_interpreter
 context = BuildContext.new
 Funcs.context = context
+
+config_path = context.donk_config_path
+
+puts config_path
+if File.exists? config_path
+  Log.info { "Loading config #{config_path}" }
+  rb.load_script_from_file(config_path.to_s)
+end
 
 if File.exists? "Donk.rb"
   rb.load_script_from_file("Donk.rb")
