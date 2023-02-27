@@ -1,32 +1,61 @@
-module BuildRule
+require "yaml"
+
+class BuildRule
   getter name : String
+  getter type : String?
 
-  abstract def run
-end
-
-class RubyBlockBuildRule
-  include BuildRule
-
-  def initialize(@name : String, @block : Anyolite::RbRef)
+  def initialize(@type : String?, @name : String, @block : Anyolite::RbRef)
   end
 
   def run
-    Anyolite.call_rb_block(@block, nil)
+    call_rb_block(@block, nil)
+  end
+end
+
+class Config
+  include YAML::Serializable
+
+  @container_binary : String? = nil
+  getter library_paths = Set(Path).new
+
+  def initialize
+  end
+
+  @[Anyolite::WrapWithoutKeywords]
+  def add_library(path : String)
+    @library_paths << Path[path].expand(home: true)
+    nil
+  end
+
+  def container_binary : String
+    @container_binary ||= Process.find_executable("docker").not_nil!
+  end
+
+  def container_binary=(bin : String)
+    if b = Process.find_executable(bin)
+      @container_binary = b
+    else
+      raise "could not find #{bin}"
+    end
   end
 end
 
 class BuildContext
   DONKROOT_FILE_NAME = "DonkConfig.rb"
   getter rules
-  getter container_binary : String
   property name : String
   getter root_dir : Path
 
+  getter config = Config.new
+
   def initialize
     @rules = Hash(String, BuildRule).new
-    @container_binary = Process.find_executable("docker").not_nil!
     @name = File.basename(Dir.current)
     @root_dir = BuildContext.get_root(Dir.current)
+  end
+
+  def container_binary : String
+    @config.container_binary
   end
 
   def define_rule(rule : BuildRule)

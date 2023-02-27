@@ -9,7 +9,12 @@ def _crystal_build(opts)
   imgdef.run %w(apk add -u crystal shards libc-dev)
   imgdef.workdir "/src"
   imgdef.copy "shard.*", "."
-  imgdef.run %w(shards install)
+  if opts[:includes]
+    opts[:includes].each do |dest, path|
+      imgdef.copy path, dest
+    end
+  end
+  # imgdef.run %w(shards install)
   imgdef.copy ".", "."
   return imgdef
 end
@@ -18,7 +23,7 @@ def crystal_runnable(**opts)
   name = opts[:name]
   target = opts[:target]
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _crystal_build(opts)
     args = ["shards", "run", target]
     if opts[:build_flags]
@@ -40,7 +45,7 @@ def crystal_image(**opts)
 
   run_image = opts[:run_image] || CRYSTAL_RUN_DEFAULT_IMAGE
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _crystal_build(opts)
     args = ["shards", "build", target, "--static"]
     if opts[:build_flags]

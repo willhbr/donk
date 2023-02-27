@@ -20,7 +20,7 @@ end
 def ruby_runnable(**opts)
   name = opts[:name]
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _ruby_imgdef(opts)
 
     runner = run_image(name)
@@ -35,7 +35,7 @@ def ruby_image(**opts)
   name = opts[:name]
 
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     build_image(_ruby_imgdef(opts), name)
   end
 end

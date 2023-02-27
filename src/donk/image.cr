@@ -1,53 +1,37 @@
 class ImageDef
-  def initialize(from : String, named : String?)
+  def initialize(@context : BuildContext, from : String, named : String?)
     @buffer = IO::Memory.new
     self.new_stage(from, named)
   end
 
   @[Anyolite::WrapWithoutKeywords]
   def run(command : Array(String))
-    @buffer << "RUN "
-    command.to_json @buffer
-    @buffer << '\n'
+    cmd("RUN", command.to_json)
     nil
   end
 
   @[Anyolite::WrapWithoutKeywords]
   def entrypoint(command : Array(String))
-    @buffer << "ENTRYPOINT "
-    command.to_json @buffer
-    @buffer << '\n'
+    cmd("ENTRYPOINT", command.to_json)
     nil
   end
 
   @[Anyolite::WrapWithoutKeywords]
   def workdir(path : String)
-    @buffer << "WORKDIR "
-    path.to_json @buffer
-    @buffer << '\n'
+    cmd("WORKDIR", path.to_json)
     nil
   end
 
   @[Anyolite::WrapWithoutKeywords(2)]
   def copy(src : String, dest : String, from : String? = nil)
-    @buffer << "COPY "
-    if from
-      @buffer << "--from=#{from} "
-    end
-    @buffer << src
-    @buffer << ' '
-    @buffer << dest
-    @buffer << '\n'
+    cmd("COPY",
+      from.nil? ? nil : "--from=#{from}", @context.expand_path(src).to_s, dest)
     nil
   end
 
   @[Anyolite::WrapWithoutKeywords(1)]
   def new_stage(image : String, named : String? = nil)
-    @buffer << "FROM " << image
-    if named
-      @buffer << " as " << named
-    end
-    @buffer << '\n'
+    cmd("FROM", image, named.nil? ? nil : " as #{named}")
     nil
   end
 
@@ -58,6 +42,15 @@ class ImageDef
   def inspect(io)
     @buffer.to_s io
     nil
+  end
+
+  @[Anyolite::Exclude]
+  def cmd(name, *args)
+    @buffer << name << ' '
+    args.each do |arg|
+      @buffer << arg << ' ' unless arg.nil?
+    end
+    @buffer << '\n'
   end
 end
 

@@ -6,7 +6,7 @@ def _add_ports_and_mounts(runner, opts)
   end
   if opts[:mounts]
     opts[:mounts].each do |local, container|
-      runner.mount local, container
+      runner.mount expand(local), container
     end
   end
 end

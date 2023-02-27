@@ -4,6 +4,11 @@ module Funcs
   @@context : BuildContext? = nil
   @@paths = Set(Path).new
 
+  def self.config
+    @@context.not_nil!.config
+  end
+
+  @[Anyolite::Exclude]
   def self.context
     @@context.not_nil!
   end
@@ -19,7 +24,7 @@ module Funcs
 
   @[Anyolite::WrapWithoutKeywords(1)]
   def self.define_image(from : String, named : String? = nil) : ImageDef
-    return ImageDef.new from, named
+    return ImageDef.new context, from, named
   end
 
   @[Anyolite::WrapWithoutKeywords]
@@ -29,7 +34,7 @@ module Funcs
 
     status = Process.run(
       @@context.not_nil!.container_binary,
-      args: ["build", "-t", context.full_name(name), "-f", "-", "."],
+      args: ["build", "-t", context.full_name(name), "-f", "-", context.root_dir.to_s],
       input: dockerfile,
       output: Process::Redirect::Inherit,
       error: Process::Redirect::Inherit,
@@ -42,38 +47,46 @@ module Funcs
     return RunImage.new(context.full_name(name))
   end
 
-  @[Anyolite::WrapWithoutKeywords]
+  @[Anyolite::WrapWithoutKeywords(1)]
   @[Anyolite::StoreBlockArg]
-  def self.define_rule(name : String)
+  def self.define_rule(name : String, type : String? = nil)
     unless block = Anyolite.obtain_given_rb_block
       raise "expected block given to define_rule"
     end
-    rule = RubyBlockBuildRule.new(name, block)
+    rule = BuildRule.new(type, name, block)
     @@context.not_nil!.define_rule(rule)
     nil
   end
 
   @[Anyolite::WrapWithoutKeywords]
-  def self._require_internal(current : String, path_pattern : String) : Bool
+  def self._require_internal(current_file : String, path_pattern : String)
     unless path_pattern.ends_with? ".rb"
       path_pattern += ".rb"
     end
-    expanded = Path[path_pattern].expand(base: context.root_dir, home: true)
-    current_path = Path[current].parent
-    expanded_current = Path[path_pattern].parent.expand(base: current_path, home: true)
-    one_file_matched = false
-    globs = Dir.glob(expanded_current, expanded)
-    if globs.empty?
-      raise "No files matched: #{expanded}"
+    if require_from(Path[current_file].parent, path_pattern)
+      return
     end
-    loaded = 0
+    @@context.not_nil!.config.library_paths.each do |library|
+      if require_from(library, path_pattern)
+        return
+      end
+    end
+    raise "no paths matched in any library folder: #{path_pattern}"
+  end
+
+  # Returns true if the
+  private def self.require_from(root : Path, pattern : String) : Bool
+    expanded = Path[pattern].expand(base: root, home: true)
+    globs = Dir.glob(expanded, expanded)
+    if globs.empty?
+      return false
+    end
     globs.each do |p|
       path = Path[p]
       next if @@paths.includes? path
-      loaded += 1
       Anyolite::RbRefTable.get_current_interpreter.load_script_from_file path.to_s
       @@paths << path
     end
-    return loaded > 0
+    return true
   end
 end

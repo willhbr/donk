@@ -20,7 +20,7 @@ end
 def node_runnable(**opts)
   name = opts[:name]
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _node_imgdef(opts)
 
     runner = run_image(name)
@@ -34,7 +34,7 @@ end
 def node_image(**opts)
   name = opts[:name]
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _node_imgdef(opts)
 
     build_image(imgdef, name)

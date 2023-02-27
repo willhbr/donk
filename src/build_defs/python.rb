@@ -16,7 +16,7 @@ end
 def python_runnable(**opts)
   name = opts[:name]
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _python_imgdef(opts)
 
     runner = run_image(name)
@@ -30,7 +30,7 @@ end
 def python_image(**opts)
   name = opts[:name]
 
-  define_rule(name) do
+  define_rule(name, type: __method__.to_s) do
     imgdef = _python_imgdef(opts)
     build_image(imgdef, name)
   end
