@@ -7,6 +7,7 @@ def _crystal_build(opts)
   build_image = opts[:build_image] || CRYSTAL_BUILD_DEFAULT_IMAGE
   imgdef = define_image(build_image, named: "builder")
   imgdef.run %w(apk add -u crystal shards libc-dev)
+  imgdef.run(%w(apk add -u) + opts[:apts]) if opts[:apts]
   imgdef.workdir "/src"
   imgdef.copy "shard.*", "."
   if opts[:includes]

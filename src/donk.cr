@@ -5,12 +5,6 @@ require "json"
 
 require "./donk/*"
 
-module Colorize
-  @[Anyolite::ExcludeInstanceMethod("colorize")]
-  module ObjectExtensions
-  end
-end
-
 def make_interpreter
   rb = Anyolite::RbInterpreter.new
   Anyolite.wrap(rb, Funcs)
@@ -18,6 +12,7 @@ def make_interpreter
   Anyolite.wrap(rb, RunImage)
   Anyolite.wrap(rb, BuildContext)
   Anyolite.wrap(rb, Config)
+  Funcs.setup
   rb.execute_script_line("include Funcs")
   rb.execute_script_line({{ read_file("src/builtin.rb").strip }})
   rb

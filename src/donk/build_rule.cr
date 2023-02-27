@@ -8,7 +8,7 @@ class BuildRule
   end
 
   def run
-    call_rb_block(@block, nil)
+    call_rb_block(@block, [] of Nil)
   end
 end
 
