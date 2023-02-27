@@ -20,12 +20,12 @@ end
 def ruby_runnable(**opts)
   name = opts[:name]
 
-  imgdef = _ruby_imgdef(opts)
-
-  runner = run_image(name)
-  _add_ports_and_mounts(runner, opts)
-
   define_rule(name) do
+    imgdef = _ruby_imgdef(opts)
+
+    runner = run_image(name)
+    _add_ports_and_mounts(runner, opts)
+
     build_image(imgdef, name)
     runner.run
   end
@@ -34,10 +34,9 @@ end
 def ruby_image(**opts)
   name = opts[:name]
 
-  imgdef = _ruby_imgdef(opts)
 
   define_rule(name) do
-    build_image(imgdef, name)
+    build_image(_ruby_imgdef(opts), name)
   end
 end
 
