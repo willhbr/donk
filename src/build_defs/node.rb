@@ -1,43 +1,28 @@
-require "utils"
-
-NODE_DEFAULT_IMAGE = "node:18-alpine"
-
-def _node_imgdef(opts)
-  main = opts[:main]
-
-  build_image = opts[:build_image] || NODE_DEFAULT_IMAGE
-  imgdef = define_image(build_image)
-  imgdef.workdir "/src"
-  if File.exists? "package.json"
-    imgdef.copy "package*.json", "."
-    imgdef.run %w(npm install)
+def _node_image(name, **opts)
+  build(name) do |img|
+    img.from 'node:18-alpine'
+    if pkg = opts[:packages]
+      img.run %w(apk add -u) + pkg
+    end
+    img.workdir "/src"
+    img.copy "package.json", "."
+    img.run %w(npm install)
+    img.copy '.', '.'
+    yield img
   end
-  imgdef.copy ".", "."
-  imgdef.entrypoint ["node", main]
-  return imgdef
-end
 
-def node_runnable(**opts)
-  name = opts[:name]
-
-  define_rule(name, type: __method__.to_s) do
-    imgdef = _node_imgdef(opts)
-
-    runner = run_image(name)
-    _add_ports_and_mounts(runner, opts)
-
-    build_image(imgdef, name)
-    runner.run
+  run(name) do |runner|
+    opts[:ports]&.each do |local, container|
+      runner.bind_port local.to_i, container.to_i
+    end
+    opts[:mounts]&.each do |local, container|
+      runner.mount local, container
+    end
   end
 end
 
 def node_image(**opts)
-  name = opts[:name]
-
-  define_rule(name, type: __method__.to_s) do
-    imgdef = _node_imgdef(opts)
-
-    build_image(imgdef, name)
+  _node_image(opts[:name], **opts) do |img|
+    img.entrypoint ['node', opts[:main]]
   end
 end
-

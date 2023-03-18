@@ -1,38 +1,28 @@
-require "utils"
+def _python_image(name, **opts)
+  build(name) do |img|
+    img.from 'python:alpine'
+    if pkg = opts[:packages]
+      img.run %w(apk add -u) + pkg
+    end
+    img.workdir "/src"
+    img.copy "requirements.txt", "."
+    img.run %w(pip install)
+    img.copy '.', '.'
+    yield img
+  end
 
-PYTHON_DEFAULT_IMAGE = "python:alpine"
-
-def _python_imgdef(opts)
-  main = opts[:main]
-
-  build_image = opts[:build_image] || PYTHON_DEFAULT_IMAGE
-  imgdef = define_image(build_image)
-  imgdef.workdir "/src"
-  imgdef.copy ".", "."
-  imgdef.entrypoint ["python", main]
-  return imgdef
-end
-
-def python_runnable(**opts)
-  name = opts[:name]
-
-  define_rule(name, type: __method__.to_s) do
-    imgdef = _python_imgdef(opts)
-
-    runner = run_image(name)
-    _add_ports_and_mounts(runner, opts)
-
-    build_image(imgdef, name)
-    runner.run
+  run(name) do |runner|
+    opts[:ports]&.each do |local, container|
+      runner.bind_port local.to_i, container.to_i
+    end
+    opts[:mounts]&.each do |local, container|
+      runner.mount local, container
+    end
   end
 end
 
 def python_image(**opts)
-  name = opts[:name]
-
-  define_rule(name, type: __method__.to_s) do
-    imgdef = _python_imgdef(opts)
-    build_image(imgdef, name)
+  _python_image(opts[:name], **opts) do |img|
+    img.entrypoint ['python', opts[:main]]
   end
 end
-

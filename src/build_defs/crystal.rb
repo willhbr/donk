@@ -12,6 +12,7 @@ def _crystal_binary(name, **opts)
         img.copy path, '/deps/' + File.basename(path)
       end
     end
+    img.run ["shards", "install"]
     img.copy '.', '.'
     yield img
   end
@@ -20,8 +21,8 @@ def _crystal_binary(name, **opts)
     opts[:ports]&.each do |local, container|
       runner.bind_port local.to_i, container.to_i
     end
-    opts[:ports]&.each do |local, container|
-      runner.bind_port local.to_i, container.to_i
+    opts[:mounts]&.each do |local, container|
+      runner.bind_port local, container
     end
   end
 end
