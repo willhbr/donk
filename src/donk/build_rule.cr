@@ -1,17 +1,5 @@
 require "yaml"
 
-class BuildRule
-  getter name : String
-  getter type : String?
-
-  def initialize(@type : String?, @name : String, @block : Anyolite::RbRef)
-  end
-
-  def run
-    call_rb_block(@block, [] of Nil)
-  end
-end
-
 class Config
   include YAML::Serializable
 
@@ -42,14 +30,14 @@ end
 
 class BuildContext
   DONKROOT_FILE_NAME = "DonkConfig.rb"
-  getter rules
+  getter build_rules = Hash(String, BuildRule).new
+  getter run_rules = Hash(String, RunRule).new
   property name : String
   getter root_dir : Path
 
   getter config = Config.new
 
   def initialize
-    @rules = Hash(String, BuildRule).new
     @name = File.basename(Dir.current)
     @root_dir = BuildContext.get_root(Dir.current)
   end
@@ -58,8 +46,14 @@ class BuildContext
     @config.container_binary
   end
 
+  @[Anyolite::Exclude]
   def define_rule(rule : BuildRule)
-    @rules[rule.name] = rule
+    @build_rules[rule.name] = rule
+  end
+
+  @[Anyolite::Exclude]
+  def define_rule(rule : RunRule)
+    @run_rules[rule.name] = rule
   end
 
   @[Anyolite::Exclude]
@@ -67,15 +61,9 @@ class BuildContext
     "#{@name}/#{name}"
   end
 
-  @[Anyolite::Exclude]
-  def expand_path(path_str : String) : Path
-    root = @root_dir
-    if path_str.starts_with?("//")
-      path_str = path_str[2..]
-      return (root / path_str).relative_to(root)
-    else
-      return (Path[Dir.current] / path_str).relative_to(root)
-    end
+  def expand_path(path : String) : Path
+    p = DonkPath.parse(@root_dir, path)
+    (@root_dir / p.path).relative_to(@root_dir)
   end
 
   @[Anyolite::Exclude]

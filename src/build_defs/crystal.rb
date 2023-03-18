@@ -1,64 +1,45 @@
-require "utils"
+def _crystal_binary(name, **opts)
+  build(name) do |img|
+    img.from 'alpine:latest'
+    img.run %w(apk add -u crystal shards libc-dev)
+    if pkg = opts[:packages]
+      img.run %w(apk add -u) + pkg
+    end
+    img.workdir "/src"
+    img.copy "shard.*", "."
+    if shards = opts[:local_shards]
+      shards.each do |path|
+        img.copy path, '/deps/' + File.basename(path)
+      end
+    end
+    img.copy '.', '.'
+    yield img
+  end
 
-CRYSTAL_BUILD_DEFAULT_IMAGE = "alpine:latest"
-CRYSTAL_RUN_DEFAULT_IMAGE = "busybox"
-
-def _crystal_build(opts)
-  build_image = opts[:build_image] || CRYSTAL_BUILD_DEFAULT_IMAGE
-  imgdef = define_image(build_image, named: "builder")
-  imgdef.run %w(apk add -u crystal shards libc-dev)
-  imgdef.run(%w(apk add -u) + opts[:apts]) if opts[:apts]
-  imgdef.workdir "/src"
-  imgdef.copy "shard.*", "."
-  if opts[:includes]
-    opts[:includes].each do |dest, path|
-      imgdef.copy path, dest
+  run(name) do |runner|
+    opts[:ports]&.each do |local, container|
+      runner.bind_port local.to_i, container.to_i
+    end
+    opts[:ports]&.each do |local, container|
+      runner.bind_port local.to_i, container.to_i
     end
   end
-  # imgdef.run %w(shards install)
-  imgdef.copy ".", "."
-  return imgdef
 end
 
 def crystal_runnable(**opts)
-  name = opts[:name]
-  target = opts[:target]
-
-  define_rule(name, type: __method__.to_s) do
-    imgdef = _crystal_build(opts)
-    args = ["shards", "run", target]
-    if opts[:build_flags]
-      args += opts[:build_flags]
-    end
-    imgdef.entrypoint args
-
-    runner = run_image(name)
-    _add_ports_and_mounts(runner, opts)
-
-    build_image(imgdef, name)
-    runner.run
+  _crystal_binary(opts[:name], **opts) do |img|
+    img.entrypoint ['shards', 'run', opts[:target]]
   end
 end
 
-def crystal_image(**opts)
-  name = opts[:name]
-  target = opts[:target]
+def crystal_release(**opts)
+  _crystal_binary(opts[:name], **opts) do |img|
+    img.run ['shards', 'build', opts[:target], '--static']
 
-  run_image = opts[:run_image] || CRYSTAL_RUN_DEFAULT_IMAGE
-
-  define_rule(name, type: __method__.to_s) do
-    imgdef = _crystal_build(opts)
-    args = ["shards", "build", target, "--static"]
-    if opts[:build_flags]
-      args += opts[:build_flags]
-    end
-    imgdef.run args
-
-    imgdef.new_stage(run_image)
-    imgdef.workdir "/app"
-    imgdef.copy "/src/bin/" + target, "/app/" + target, from: "builder"
-    imgdef.entrypoint ["/app/" + target]
-
-    build_image(imgdef, name)
+    img.from(run_image)
+    img.workdir "/app"
+    img.copy "/src/bin/" + target, "/app/" + target, from: '0'
+    img.entrypoint ["/app/" + target]
   end
 end
+

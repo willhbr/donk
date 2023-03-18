@@ -17,4 +17,4 @@ dependencies:
     github: Anyolite/anyolite
     branch: main
   geode:
-    path: ../geode
+    github: willhbr/geode

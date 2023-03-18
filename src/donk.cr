@@ -8,8 +8,8 @@ require "./donk/*"
 def make_interpreter
   rb = Anyolite::RbInterpreter.new
   Anyolite.wrap(rb, Funcs)
-  Anyolite.wrap(rb, ImageDef)
-  Anyolite.wrap(rb, RunImage)
+  Anyolite.wrap(rb, RunRule)
+  Anyolite.wrap(rb, BuildRule)
   Anyolite.wrap(rb, BuildContext)
   Anyolite.wrap(rb, Config)
   Funcs.setup
@@ -47,10 +47,28 @@ parser = OptionParser.new do |parser|
     exit
   end
 
-  context.rules.values.each do |rule|
-    parser.on(rule.name, "Run #{rule.type} #{rule.name}") do
-      Log.info { "Running #{rule.name}" }
-      rule.run
+  parser.on("list", "list rules") do
+    puts context.build_rules.keys.join('\n')
+  end
+
+  parser.on("build", "build a rule") do
+    context.build_rules.values.each do |rule|
+      parser.on(rule.name, "Build #{rule.name}") do
+        Log.info { "Building #{rule.name}" }
+        rule.build
+      end
+    end
+  end
+  parser.on("run", "run a rule") do
+    context.run_rules.values.each do |rule|
+      parser.on(rule.name, "Run #{rule.name}") do
+        if build = context.build_rules[rule.name]
+          Log.info { "Building #{rule.name}" }
+          build.build
+        end
+        Log.info { "Running #{rule.name}" }
+        rule.run
+      end
     end
   end
 end

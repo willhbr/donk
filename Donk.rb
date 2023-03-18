@@ -3,12 +3,10 @@ require "crystal"
 crystal_runnable(
   name: "test",
   target: "donk",
-  includes: {
-    "/deps/geode" => "//geode"
-  }
+  packages: %w(yaml-dev)
 )
 
-crystal_image(
+crystal_release(
   name: "hello_world",
   target: "donk",
   build_flags: %w(--release),
