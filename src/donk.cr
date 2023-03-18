@@ -28,7 +28,6 @@ Funcs.context = context
 
 config_path = context.donk_config_path
 
-puts config_path
 if File.exists? config_path
   rb.load_script_from_file(config_path.to_s)
 end

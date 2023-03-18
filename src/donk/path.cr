@@ -1,5 +1,4 @@
 struct DonkPath
-  getter name : String?
   getter path : Path
 
   def initialize(dir : Path, name : String?)
@@ -25,7 +24,7 @@ struct DonkPath
     return new(p, name)
   end
 
-  def absolute(root : Path) : Path
+  def from_root(root : Path) : Path
     root / @path
   end
 
