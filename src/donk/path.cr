@@ -28,4 +28,8 @@ struct DonkPath
     io << "//"
     @path.to_s(io)
   end
+
+  def no_prefix
+    @path.to_s
+  end
 end

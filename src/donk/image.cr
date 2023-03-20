@@ -66,7 +66,7 @@ class BuildRule
 
     status = Process.run(
       @context.container_binary,
-      args: ["build", "-t", @path.to_s,
+      args: ["build", "-t", @path.no_prefix,
              "-f", "-", @context.root_dir.to_s],
       input: dockerfile,
       output: Process::Redirect::Inherit,
@@ -121,7 +121,7 @@ class RunRule
       args << "#{l}:#{c}"
     end
 
-    args.concat(["-it", "--rm", @path.to_s])
+    args.concat(["-it", "--rm", @path.no_prefix])
 
     status = Process.run(
       @context.container_binary,

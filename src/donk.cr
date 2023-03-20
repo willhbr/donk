@@ -54,8 +54,34 @@ class Donk::CLI < Clim
       argument "target", type: String, desc: "build target", required: true
       run do |opts, args|
         rb, context = Donk.setup
-        # target = DonkPath.parse(args.target)
-        # context.build_rules[target]
+        target = DonkPath.parse(context.root_dir, Path[Dir.current], args.target)
+        unless rule = context.build_rules[target]?
+          raise "no such target: #{target}"
+        end
+        rule.build
+        rb.close
+      end
+    end
+
+    sub "run" do
+      desc "run an image"
+      usage "donk run <target> -- [arguments]"
+      option "-r RUN_ONLY", "--run_only=RUN_ONLY", type: Bool, desc: "Run only, no build", default: false
+
+      argument "target", type: String, desc: "run target", required: true
+      run do |opts, args|
+        rb, context = Donk.setup
+        target = DonkPath.parse(context.root_dir, Path[Dir.current], args.target)
+        unless opts.run_only
+          unless rule = context.build_rules[target]?
+            raise "no such target: #{target}"
+          end
+          rule.build
+        end
+        unless rule = context.run_rules[target]?
+          raise "no such target: #{target}"
+        end
+        rule.run
         rb.close
       end
     end

@@ -62,7 +62,7 @@ class BuildContext
   end
 
   def expand_path(path : String) : Path
-    p = DonkPath.parse(@root_dir, Path[Dir.current], path)
+    p = DonkPath.parse(@root_dir, current_dir, path)
     (@root_dir / p.path).relative_to(@root_dir)
   end
 
