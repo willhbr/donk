@@ -29,11 +29,6 @@ module Donk
       rb.load_script_from_file(config_path.to_s)
     end
 
-    if File.exists? "Donk.rb"
-      rb.load_script_from_file("Donk.rb")
-    else
-      Log.info { "no Donk.rb file :(" }
-    end
     return {rb, context}
   end
 end
@@ -55,6 +50,13 @@ class Donk::CLI < Clim
       run do |opts, args|
         rb, context = Donk.setup
         target = DonkPath.parse(context.root_dir, Path[Dir.current], args.target)
+        donkfile = target.from_root(context.root_dir).parent / "Donk.rb"
+        if File.exists? donkfile
+          context.@dirs << donkfile.parent
+          rb.load_script_from_file(donkfile.to_s)
+        else
+          raise "No Donk.rb file in #{donkfile.parent} for #{target}"
+        end
         unless rule = context.build_rules[target]?
           raise "no such target: #{target}"
         end
@@ -72,6 +74,13 @@ class Donk::CLI < Clim
       run do |opts, args|
         rb, context = Donk.setup
         target = DonkPath.parse(context.root_dir, Path[Dir.current], args.target)
+        donkfile = target.from_root(context.root_dir).parent / "Donk.rb"
+        if File.exists? donkfile
+          context.@dirs << donkfile.parent
+          rb.load_script_from_file(donkfile.to_s)
+        else
+          raise "No Donk.rb file in #{donkfile.parent} for #{target}"
+        end
         unless opts.run_only
           unless rule = context.build_rules[target]?
             raise "no such target: #{target}"
@@ -89,8 +98,17 @@ class Donk::CLI < Clim
     sub "list" do
       desc "list targets"
       usage "donk list [arguments]"
+      argument "target", type: String, desc: "list targets", default: "."
       run do |opts, args|
         rb, context = Donk.setup
+        target = DonkPath.parse(context.root_dir, Path[Dir.current], args.target)
+        donkfile = target.from_root(context.root_dir) / "Donk.rb"
+        if File.exists? donkfile
+          context.@dirs << donkfile.parent
+          rb.load_script_from_file(donkfile.to_s)
+        else
+          raise "No Donk.rb file in #{donkfile.parent} for #{target}"
+        end
         puts context.build_rules.keys.join('\n')
         rb.close
       end

@@ -38,7 +38,6 @@ class BuildContext
 
   def initialize
     @dirs = Array(Path).new
-    @dirs << Path[Dir.current]
     @root_dir = BuildContext.get_root(Dir.current)
   end
 

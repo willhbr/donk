@@ -24,5 +24,5 @@ ruby_runnable(
 And then run it:
 
 ```shell
-$ donk my_ruby_project
+$ donk run my_ruby_project
 ```
