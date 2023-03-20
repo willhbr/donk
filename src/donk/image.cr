@@ -54,10 +54,9 @@ class BuildRule
     end
   end
 
-  getter name : String
+  getter path : DonkPath
 
-  def initialize(@context : BuildContext, name : String, @block : Anyolite::RbRef)
-    @name = @context.full_name(name)
+  def initialize(@context : BuildContext, @path, @block : Anyolite::RbRef)
   end
 
   def build
@@ -67,7 +66,7 @@ class BuildRule
 
     status = Process.run(
       @context.container_binary,
-      args: ["build", "-t", @name,
+      args: ["build", "-t", @path.to_s,
              "-f", "-", @context.root_dir.to_s],
       input: dockerfile,
       output: Process::Redirect::Inherit,
@@ -99,10 +98,9 @@ class RunRule
     end
   end
 
-  getter name : String
+  getter path : DonkPath
 
-  def initialize(@context : BuildContext, name : String, @block : Anyolite::RbRef)
-    @name = @context.full_name(name)
+  def initialize(@context : BuildContext, @path, @block : Anyolite::RbRef)
   end
 
   def run
@@ -123,7 +121,7 @@ class RunRule
       args << "#{l}:#{c}"
     end
 
-    args.concat(["-it", "--rm", @name])
+    args.concat(["-it", "--rm", @path.to_s])
 
     status = Process.run(
       @context.container_binary,

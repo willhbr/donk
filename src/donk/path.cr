@@ -1,27 +1,23 @@
 struct DonkPath
   getter path : Path
 
-  def initialize(dir : Path, name : String?)
-    @path = dir
-    @name = name
+  def initialize(dir : Path, name : String)
+    @path = dir / name
   end
 
-  def self.parse(root : Path, path : String)
-    if idx = path.rindex(':')
-      dir = path[0...idx]
-      name = path[(idx + 1)..-1]
+  def self.parse(root : Path, current : Path, path : String)
+    if path.starts_with? "//"
+      path = path[2..]
+      p = (root / path).relative_to(root)
     else
-      dir = path.to_s
-      name = nil
-    end
-    if dir.starts_with? "//"
-      dir = dir[2..]
-      p = (root / dir).relative_to(root)
-    else
-      p = (Path[Dir.current] / dir).relative_to(root)
+      p = (current / path).relative_to(root)
     end
 
-    return new(p, name)
+    new(p.parent, p.basename)
+  end
+
+  def name : String
+    path.basename
   end
 
   def from_root(root : Path) : Path
@@ -31,8 +27,5 @@ struct DonkPath
   def to_s(io)
     io << "//"
     @path.to_s(io)
-    if name = @name
-      io << ':' << name
-    end
   end
 end

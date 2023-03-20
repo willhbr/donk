@@ -30,16 +30,21 @@ end
 
 class BuildContext
   DONKROOT_FILE_NAME = "DonkConfig.rb"
-  getter build_rules = Hash(String, BuildRule).new
-  getter run_rules = Hash(String, RunRule).new
-  property name : String
+  getter build_rules = Hash(DonkPath, BuildRule).new
+  getter run_rules = Hash(DonkPath, RunRule).new
   getter root_dir : Path
 
   getter config = Config.new
 
   def initialize
-    @name = File.basename(Dir.current)
+    @dirs = Array(Path).new
+    @dirs << Path[Dir.current]
     @root_dir = BuildContext.get_root(Dir.current)
+  end
+
+  @[Anyolite::Exclude]
+  def current_dir : Path
+    @dirs.last.not_nil!
   end
 
   def container_binary : String
@@ -48,21 +53,16 @@ class BuildContext
 
   @[Anyolite::Exclude]
   def define_rule(rule : BuildRule)
-    @build_rules[rule.name] = rule
+    @build_rules[rule.path] = rule
   end
 
   @[Anyolite::Exclude]
   def define_rule(rule : RunRule)
-    @run_rules[rule.name] = rule
-  end
-
-  @[Anyolite::Exclude]
-  def full_name(name)
-    "#{@name}/#{name}"
+    @run_rules[rule.path] = rule
   end
 
   def expand_path(path : String) : Path
-    p = DonkPath.parse(@root_dir, path)
+    p = DonkPath.parse(@root_dir, Path[Dir.current], path)
     (@root_dir / p.path).relative_to(@root_dir)
   end
 

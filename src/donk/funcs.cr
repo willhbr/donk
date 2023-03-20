@@ -28,7 +28,8 @@ module Funcs
     unless block = Anyolite.obtain_given_rb_block
       raise "expected block given to build()"
     end
-    rule = BuildRule.new(context, name, block)
+    path = DonkPath.new(context.current_dir.relative_to(context.root_dir), name)
+    rule = BuildRule.new(context, path, block)
     context.define_rule(rule)
     rule
   end
@@ -39,7 +40,8 @@ module Funcs
     unless block = Anyolite.obtain_given_rb_block
       raise "expected block given to run()"
     end
-    rule = RunRule.new(context, name, block)
+    path = DonkPath.new(context.current_dir.relative_to(context.root_dir), name)
+    rule = RunRule.new(context, path, block)
     context.define_rule(rule)
     rule
   end
@@ -69,7 +71,9 @@ module Funcs
     globs.each do |p|
       path = Path[p]
       next if @@paths.includes? path
+      context.@dirs << path.parent
       Anyolite::RbRefTable.get_current_interpreter.load_script_from_file path.to_s
+      context.@dirs.pop
       @@paths << path
     end
     return true

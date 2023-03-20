@@ -4,6 +4,10 @@ shards:
     git: https://github.com/anyolite/anyolite.git
     version: 1.0.0+git.commit.4a5cdbc796c1d17b71dcb386c2a9b5f0c462a530
 
+  clim:
+    git: https://github.com/at-grandpa/clim.git
+    version: 0.17.1
+
   geode:
     git: https://github.com/willhbr/geode.git
     version: 0.1.0+git.commit.57f5f7451df00def1f799f73dd43ecc5257a7439
