@@ -37,7 +37,7 @@ def crystal_release(**opts)
   _crystal_binary(opts[:name], **opts) do |img|
     img.run ['shards', 'build', opts[:target], '--static']
 
-    img.from(run_image)
+    img.from('busybox:latest')
     img.workdir "/app"
     img.copy "/src/bin/" + target, "/app/" + target, from: '0'
     img.entrypoint ["/app/" + target]

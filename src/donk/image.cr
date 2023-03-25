@@ -103,7 +103,7 @@ class RunRule
   def initialize(@context : BuildContext, @path, @block : Anyolite::RbRef)
   end
 
-  def run
+  def args : Array(String)
     conf = Config.new(@context)
     call_rb_block(@block, [conf])
 
@@ -122,10 +122,13 @@ class RunRule
     end
 
     args.concat(["-it", "--rm", @path.no_prefix])
+    args
+  end
 
+  def run
     status = Process.run(
       @context.container_binary,
-      args: args,
+      args: self.args,
       input: Process::Redirect::Inherit,
       output: Process::Redirect::Inherit,
       error: Process::Redirect::Inherit,

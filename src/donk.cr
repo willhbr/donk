@@ -95,6 +95,29 @@ class Donk::CLI < Clim
       end
     end
 
+    sub "getargs" do
+      desc "get args to an image"
+      usage "donk getargs <target> -- [arguments]"
+
+      argument "target", type: String, desc: "run target", required: true
+      run do |opts, args|
+        rb, context = Donk.setup
+        target = DonkPath.parse(context.root_dir, Path[Dir.current], args.target)
+        donkfile = target.from_root(context.root_dir).parent / "Donk.rb"
+        if File.exists? donkfile
+          context.@dirs << donkfile.parent
+          rb.load_script_from_file(donkfile.to_s)
+        else
+          raise "No Donk.rb file in #{donkfile.parent} for #{target}"
+        end
+        unless rule = context.run_rules[target]?
+          raise "no such target: #{target}"
+        end
+        puts Process.quote([context.container_binary] + rule.args)
+        rb.close
+      end
+    end
+
     sub "list" do
       desc "list targets"
       usage "donk list [arguments]"
